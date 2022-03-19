@@ -56,6 +56,141 @@ namespace ConfigSaverTest
 }
 ```
 
+#### KeyAuth C-Sharp Example - [WORKS ONLY WITH THESE VERSIONS](https://github.com/mazk5145/ConfigSaver/releases)
+
+```cs
+using System;
+using System.Diagnostics;
+using System.Net;
+using System.Threading;
+using System.Windows.Forms;
+using ConfigSaver;
+
+namespace KeyAuth
+{
+    class Program
+    {
+        public static api KeyAuthApp = new api(
+            name: "",
+            ownerid: "",
+            secret: "",
+            version: "1.0"
+        );
+
+        static string username;
+        static string password;
+        static string key;
+
+        static void Main(string[] args)
+        {
+
+            Console.Title = "Loader";
+            Console.WriteLine("\n\n Connecting..");
+            KeyAuthApp.init();
+
+            if (!KeyAuthApp.response.success)
+            {
+                Console.WriteLine("\n Status: " + KeyAuthApp.response.message);
+                Thread.Sleep(1500);
+                Environment.Exit(0);
+            }
+            // app data
+            Console.WriteLine("\n App data:");
+            Console.WriteLine(" Number of users: " + KeyAuthApp.app_data.numUsers);
+            Console.WriteLine(" Number of online users: " + KeyAuthApp.app_data.numOnlineUsers);
+            Console.WriteLine(" Number of keys: " + KeyAuthApp.app_data.numKeys);
+            Console.WriteLine(" Application Version: " + KeyAuthApp.app_data.version);
+            Console.WriteLine(" Customer panel link: " + KeyAuthApp.app_data.customerPanelLink);
+            KeyAuthApp.check();
+            Console.WriteLine($" Current Session Validation Status: {KeyAuthApp.response.message}"); // you can also just check the status but ill just print the message
+
+            if (CF.isExisting())
+            {
+                KeyAuthApp.login(CF.js("user"), CF.js("pass"));
+            } else {
+                Console.WriteLine("\n [1] Login\n [2] Register\n [3] Upgrade\n\n Choose option: ");
+
+                int option = int.Parse(Console.ReadLine());
+                switch (option)
+                {
+                    case 1:
+                        Console.WriteLine("\n\n Enter username: ");
+                        username = Console.ReadLine();
+                        Console.WriteLine("\n\n Enter password: ");
+                        password = Console.ReadLine();
+                        KeyAuthApp.login(username, password);
+                        break;
+                    case 2:
+                        Console.WriteLine("\n\n Enter username: ");
+                        username = Console.ReadLine();
+                        Console.WriteLine("\n\n Enter password: ");
+                        password = Console.ReadLine();
+                        Console.WriteLine("\n\n Enter license: ");
+                        key = Console.ReadLine();
+                        KeyAuthApp.register(username, password, key);
+                        break;
+                    case 3:
+                        Console.WriteLine("\n\n Enter username: ");
+                        username = Console.ReadLine();
+                        Console.WriteLine("\n\n Enter license: ");
+                        key = Console.ReadLine();
+                        KeyAuthApp.upgrade(username, key);
+                        break;
+                    default:
+                        Console.WriteLine("\n\n Invalid Selection");
+                        Thread.Sleep(1500);
+                        Environment.Exit(0);
+                        break; // no point in this other than to not get error from IDE
+                }
+            }
+
+            if (!KeyAuthApp.response.success)
+            {
+                if (CF.isExisting()) { CF.DelConfig(); }
+
+                Console.WriteLine("\n Status: " + KeyAuthApp.response.message);
+                Thread.Sleep(1500);
+                Environment.Exit(0);
+            }
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+            { } else {
+                CF.CreateConfig(username, password);
+            }
+
+            Console.WriteLine("\n Logged In!"); // at this point, the client has been authenticated. Put the code you want to run after here
+
+            // user data
+            Console.WriteLine("\n User data:");
+            Console.WriteLine(" Username: " + KeyAuthApp.user_data.username);
+            Console.WriteLine(" IP address: " + KeyAuthApp.user_data.ip);
+            Console.WriteLine(" Hardware-Id: " + KeyAuthApp.user_data.hwid);
+            Console.WriteLine(" Created at: " + UnixTimeToDateTime(long.Parse(KeyAuthApp.user_data.createdate)));
+            if (!String.IsNullOrEmpty(KeyAuthApp.user_data.lastlogin)) // don't show last login on register since there is no last login at that point
+                Console.WriteLine(" Last login at: " + UnixTimeToDateTime(long.Parse(KeyAuthApp.user_data.lastlogin)));
+            Console.WriteLine(" Your subscription(s):");
+            for (var i = 0; i < KeyAuthApp.user_data.subscriptions.Count; i++)
+            {
+                Console.WriteLine(" Subscription name: " + KeyAuthApp.user_data.subscriptions[i].subscription + " - Expires at: " + UnixTimeToDateTime(long.Parse(KeyAuthApp.user_data.subscriptions[i].expiry)) + " - Time left in seconds: " + KeyAuthApp.user_data.subscriptions[i].timeleft);
+            }
+
+            KeyAuthApp.check();
+            Console.WriteLine($" Current Session Validation Status: {KeyAuthApp.response.message}"); // you can also just check the status but ill just print the message
+            Console.WriteLine("\n Closing in ten seconds...");
+            Thread.Sleep(10000);
+            Environment.Exit(0);
+        }
+
+        public static DateTime UnixTimeToDateTime(long unixtime)
+        {
+            DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Local);
+            dtDateTime = dtDateTime.AddSeconds(unixtime).ToLocalTime();
+            return dtDateTime;
+        }
+    }
+}
+```
+
 -----------------------------
 
 #### Created for KeyAuth C-Sharp Loaders
