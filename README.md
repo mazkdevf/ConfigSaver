@@ -191,6 +191,52 @@ namespace KeyAuth
 }
 ```
 
+##### KeyAuth C-Sharp Forms Example - DLL_Version : [1.15 - Release](https://github.com/mazk5145/ConfigSaver/releases/tag/Release_)
+
+```cs
+using System.Windows.Forms;
+using ConfigSaver; 
+
+
+namespace KeyAuth
+{
+    static class Program
+    {
+
+        /// <summary>
+        /// IF you are using KeyAuth Example non modifed Login form name is Login.cs 
+        ///
+        /// Login. = Form Name where is KeyAuth Details
+        /// Main = Form After Login
+        /// </summary>
+        static void Main()
+        {
+            Login.KeyAuthApp.init();
+            if (CF.isExisting())
+            {
+                Login.KeyAuthApp.login(CF.js("user"), CF.js("pass"));
+                if (Login.KeyAuthApp.response.success)
+                {
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.Run(new Main());
+                }
+                else
+                {
+                    CF.DelConfig();
+                    api.error($"Status: {Login.KeyAuthApp.response.message}");
+                }
+            }
+            else { }
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new Login());
+        }
+    }
+}
+```
+
 -----------------------------
 
 #### Created for KeyAuth C-Sharp Loaders
